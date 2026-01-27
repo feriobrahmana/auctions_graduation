@@ -305,8 +305,21 @@
         }
       };
 
+      const showError = (message) => {
+        statusEl.innerHTML = '<span class="status-pill status-closed">UNAVAILABLE</span>';
+        titleEl.textContent = "Unable to load item";
+        descriptionEl.textContent = message;
+        metaEl.innerHTML = "";
+        bidSection.hidden = true;
+        closedSection.hidden = false;
+        closedSection.innerHTML = `<div class="notice error">${message}</div>`;
+      };
+
       const fetchState = async () => {
-        if (!itemId) return;
+        if (!itemId) {
+          showError("Missing item id in the URL.");
+          return;
+        }
         try {
           const response = await fetch(
             `${API_URL}?action=get_state&key=${encodeURIComponent(
@@ -314,9 +327,14 @@
             )}&item_id=${encodeURIComponent(itemId)}`
           );
           const data = await response.json();
+          if (!data.ok) {
+            showError(`Unable to load item (${data.error || "unknown_error"}).`);
+            return;
+          }
           renderState(data.item || data);
         } catch (error) {
           console.error("Failed to load item", error);
+          showError("Unable to load item. Check the API URL, key, and deployment access.");
         }
       };
 
