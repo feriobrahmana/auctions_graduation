@@ -123,6 +123,25 @@
         margin-top: 24px;
       }
 
+      .status-note {
+        margin-top: 16px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-size: 0.9rem;
+        display: none;
+      }
+
+      .status-note.visible {
+        display: block;
+      }
+
+      .status-note.warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
       footer {
         text-align: center;
         color: #6b7280;
@@ -140,6 +159,7 @@
     <main>
       <section>
         <div id="items" class="items-grid"></div>
+        <div id="status-note" class="status-note" role="status" aria-live="polite"></div>
         <div id="empty" class="empty" hidden>No items yet. Check back soon.</div>
       </section>
     </main>
@@ -150,9 +170,12 @@
       const API_URL = "https://script.google.com/macros/s/AKfycbx7neSPdg_dJlI63QNApAaldHdsugbG4kNm2rHFWML8VqfVB2iXzl5GOCRxqHZumq4x/exec";
       const API_KEY = "auction-2026-ferio-9xQp2";
       const POLL_MS = 3000;
+      const CACHE_KEY = "graduation_auction_items";
+      const CACHE_TIME_KEY = "graduation_auction_items_updated";
 
       const itemsGrid = document.getElementById("items");
       const emptyState = document.getElementById("empty");
+      const statusNote = document.getElementById("status-note");
 
       const formatMoney = (value) => {
         const amount = Number(value || 0);
@@ -190,6 +213,9 @@
         emptyState.hidden = true;
 
         items.forEach((item) => {
+          const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
+          const hasBids =
+            bids.length > 0 || (Number(item.highest_bid || 0) > 0 && item.highest_bid !== null);
           const status = buildStatus(item);
           const card = document.createElement("article");
           card.className = "card";
@@ -200,9 +226,9 @@
             <h2>${item.title || "Untitled item"}</h2>
             <p>${item.description || ""}</p>
             <div class="meta">
-              <div><strong>Highest bid:</strong> ${formatMoney(item.highest_bid)}</div>
+              <div><strong>Highest bid:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
               <div><strong>Ends:</strong> ${formatDate(item.end_time_iso)}</div>
-              <div><strong>Last update:</strong> ${formatDate(item.last_update_iso)}</div>
+              <div><strong>Last update:</strong> ${hasBids ? formatDate(item.last_update_iso) : "—"}</div>
             </div>
             <a href="item.html?item_id=${encodeURIComponent(item.item_id)}">View details →</a>
           `;
@@ -210,7 +236,48 @@
         });
       };
 
+      const setStatusNote = (message, tone = "info") => {
+        if (!message) {
+          statusNote.textContent = "";
+          statusNote.className = "status-note";
+          return;
+        }
+        statusNote.textContent = message;
+        statusNote.className = `status-note visible${tone === "warning" ? " warning" : ""}`;
+      };
+
+      const loadCachedItems = () => {
+        try {
+          const cached = localStorage.getItem(CACHE_KEY);
+          if (!cached) return null;
+          const items = JSON.parse(cached);
+          if (!Array.isArray(items)) return null;
+          return items;
+        } catch (error) {
+          console.warn("Unable to read cached items", error);
+          return null;
+        }
+      };
+
+      const updateCache = (items) => {
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(items));
+          localStorage.setItem(CACHE_TIME_KEY, new Date().toISOString());
+        } catch (error) {
+          console.warn("Unable to cache items", error);
+        }
+      };
+
+      const getLastUpdatedLabel = () => {
+        const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+        if (!cachedTime) return null;
+        const date = new Date(cachedTime);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleTimeString();
+      };
+
       const fetchItems = async () => {
+        setStatusNote("Updating items…");
         try {
           const response = await fetch(
             `${API_URL}?action=list_items&key=${encodeURIComponent(API_KEY)}`
@@ -219,16 +286,37 @@
           if (!data.ok) {
             emptyState.textContent = `Unable to load items (${data.error || "unknown_error"}).`;
             emptyState.hidden = false;
+            setStatusNote("Unable to refresh items right now.", "warning");
             return;
           }
-          renderItems(data.items || []);
+          const items = data.items || [];
+          renderItems(items);
+          updateCache(items);
+          const lastUpdated = getLastUpdatedLabel();
+          setStatusNote(lastUpdated ? `Last updated at ${lastUpdated}.` : "Items are up to date.");
         } catch (error) {
           console.error("Failed to load items", error);
           emptyState.textContent =
             "Unable to load items. Check the API URL, key, and deployment access.";
           emptyState.hidden = false;
+          setStatusNote("Unable to refresh items right now.", "warning");
         }
       };
+
+      const cachedItems = loadCachedItems();
+      if (cachedItems && cachedItems.length > 0) {
+        renderItems(cachedItems);
+        const lastUpdated = getLastUpdatedLabel();
+        setStatusNote(
+          lastUpdated
+            ? `Showing cached items (last updated at ${lastUpdated}).`
+            : "Showing cached items while we refresh."
+        );
+      } else {
+        emptyState.textContent = "Loading items…";
+        emptyState.hidden = false;
+        setStatusNote("Please wait, loading items…");
+      }
 
       fetchItems();
       setInterval(fetchItems, POLL_MS);
