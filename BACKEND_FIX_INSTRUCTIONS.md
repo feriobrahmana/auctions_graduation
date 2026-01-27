@@ -1,87 +1,127 @@
 # Backend Fix Instructions (Google Apps Script)
 
-The issue you are seeing (stale data on the Landing Page) happens because the **"Items"** tab in your Google Sheet acts as a summary/cache. When a new bid comes in, the script updates that row. However, when you **manually delete** a bid from the "Bids" tab, the "Items" tab doesn't know about it and keeps showing the old numbers.
+There are two parts to this fix. You need to update your script to:
+1.  **Recalculate Stats:** Fix the "Items" sheet when you delete bids manually.
+2.  **Return Bids List:** Make the API actually send the list of recent bids to the website (so the "Recent Bids" section works).
 
-To fix this permanently, you can add a "Maintenance" script to your Google Apps Script project. You can run this function whenever you manually delete bids or edit data, and it will re-sync everything.
+## Part 1: The Maintenance Script
 
-## Step 1: Add this function to your script
+Add this function to the bottom of your script. Run it manually whenever you delete rows from the "bids" sheet.
 
-Open your Google Apps Script project (Extensions > Apps Script) and paste this code at the bottom:
+**Important:** This assumes your column headers in the "bids" sheet are: `timestamp_iso`, `item_id`, `name`, `bid`, `phone`, `note`.
 
 ```javascript
-// Run this function manually to fix "Items" sheet when you delete bids
 function recalculateItemStats() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const itemsSheet = ss.getSheetByName("items");
-  const bidsSheet = ss.getSheetByName("bids");
+  const { ss, items, bids } = getSheets_();
 
-  // 1. Read all Items
-  // Assumes headers are in row 1. Data starts row 2.
-  // Columns (0-indexed based on README):
-  // 0: item_id, 6: highest_bid, 7: highest_name, 8: highest_phone, 9: last_update_iso
-  const itemsRange = itemsSheet.getRange(2, 1, itemsSheet.getLastRow() - 1, itemsSheet.getLastColumn());
-  const itemsValues = itemsRange.getValues();
+  // 1. Read Items
+  const itemsTable = readTable_(items);
+  const ic = itemsTable.colIndex;
 
-  // 2. Read all Bids
-  // Assumes columns: item_id, name, amount, phone, timestamp
+  // 2. Read Bids
   const bidsByItem = {};
+  if (bids.getLastRow() > 1) {
+    const bidsTable = readTable_(bids);
+    const bc = bidsTable.colIndex;
 
-  // Check if there are any bids (more than just the header row)
-  if (bidsSheet.getLastRow() > 1) {
-    const bidsRange = bidsSheet.getRange(2, 1, bidsSheet.getLastRow() - 1, bidsSheet.getLastColumn());
-    const bidsValues = bidsRange.getValues();
-
-    bidsValues.forEach(row => {
-      const itemId = row[0];
-      const name = row[1];
-      const amount = row[2];
-      const phone = row[3];
-      const time = row[4];
+    bidsTable.rows.forEach(row => {
+      const itemId = String(row[bc.item_id] || "").trim();
+      const bidVal = Number(row[bc.bid]);
+      const name   = String(row[bc.name] || "");
+      const phone  = String(row[bc.phone] || "");
+      const time   = String(row[bc.timestamp_iso] || "");
 
       if (!itemId) return;
+      if (!bidsByItem[itemId]) bidsByItem[itemId] = [];
 
-      if (!bidsByItem[itemId]) {
-        bidsByItem[itemId] = [];
-      }
-      bidsByItem[itemId].push({ name, amount, phone, time });
+      bidsByItem[itemId].push({ name, bid: bidVal, phone, time });
     });
   }
 
-  // 4. Update Items
-  const updatedItems = itemsValues.map(itemRow => {
-    const itemId = itemRow[0];
-    const bids = bidsByItem[itemId] || [];
+  // 3. Update Items Sheet
+  // We need to write back to columns: highest_bid, highest_name, highest_phone, last_update_iso
+  // Note: Sheet column index = header index + 1
 
-    if (bids.length === 0) {
-      // No bids? Reset columns 6, 7, 8, 9
-      itemRow[6] = 0;    // highest_bid
-      itemRow[7] = "";   // highest_name
-      itemRow[8] = "";   // highest_phone
-      itemRow[9] = "";   // last_update_iso
+  itemsTable.rows.forEach((row, i) => {
+    const rowNum = i + 2; // header is row 1
+    const itemId = String(row[ic.item_id] || "").trim();
+    const itemBids = bidsByItem[itemId] || [];
+
+    if (itemBids.length === 0) {
+      // Reset to 0
+      items.getRange(rowNum, ic.highest_bid + 1).setValue(0);
+      items.getRange(rowNum, ic.highest_name + 1).setValue("");
+      items.getRange(rowNum, ic.highest_phone + 1).setValue("");
+      items.getRange(rowNum, ic.last_update_iso + 1).setValue("");
     } else {
-      // Find highest bid
-      // Sort descending by amount
-      bids.sort((a, b) => b.amount - a.amount);
-      const topBid = bids[0];
+      // Find highest
+      itemBids.sort((a, b) => b.bid - a.bid);
+      const top = itemBids[0];
 
-      itemRow[6] = topBid.amount;
-      itemRow[7] = topBid.name;
-      itemRow[8] = topBid.phone;
-      itemRow[9] = topBid.time; // Ensure this is ISO string if your frontend expects it
+      items.getRange(rowNum, ic.highest_bid + 1).setValue(top.bid);
+      items.getRange(rowNum, ic.highest_name + 1).setValue(top.name);
+      items.getRange(rowNum, ic.highest_phone + 1).setValue(top.phone);
+      items.getRange(rowNum, ic.last_update_iso + 1).setValue(top.time);
     }
-    return itemRow;
   });
 
-  // 5. Save back to sheet
-  itemsRange.setValues(updatedItems);
-  Logger.log("Recalculated stats for " + updatedItems.length + " items.");
+  Logger.log("Recalculated stats for all items.");
 }
 ```
 
-## Step 2: How to use it
-1.  Save the script.
-2.  Select `recalculateItemStats` from the function dropdown in the toolbar.
-3.  Click **Run**.
-4.  Grant permissions if asked.
+## Part 2: Update `doGet` to return bids
 
-After running this, your `index.html` (Landing Page) will correctly show $0 and "—" for items with no bids, because the backend database (the Items sheet) is now clean.
+Your current `doGet` function does not return the list of bids. Update the `action === "get_state"` block in your `doGet` function to look like this:
+
+```javascript
+    if (action === "get_state") {
+      const itemId = String(e?.parameter?.item_id || "").trim();
+      if (!itemId) return jsonResponse({ ok: false, error: "missing_item_id" });
+
+      const table = readTable_(items);
+      requireCols_(table.colIndex, ["item_id"], SHEET_ITEMS);
+
+      const idCol = table.colIndex["item_id"];
+      let foundRow = null;
+      for (const row of table.rows) {
+        if (String(row[idCol]).trim() === itemId) {
+          foundRow = row;
+          break;
+        }
+      }
+
+      if (!foundRow) return jsonResponse({ ok: false, error: "item_not_found" });
+
+      const itemObj = normalizeItem_(rowToObj_(table.headers, foundRow));
+
+      // --- NEW CODE STARTS HERE ---
+      // Fetch bids for this item
+      const { bids } = getSheets_();
+      const itemBids = [];
+      if (bids.getLastRow() > 1) {
+        const bidsTable = readTable_(bids);
+        const bc = bidsTable.colIndex;
+        // Optimization: In a real DB we'd filter by query, here we scan.
+        // Small scale is fine.
+        bidsTable.rows.forEach(r => {
+          if (String(r[bc.item_id]).trim() === itemId) {
+            itemBids.push({
+              name: r[bc.name],
+              bid: r[bc.bid],
+              time: r[bc.timestamp_iso]
+            });
+          }
+        });
+        // Sort newest first
+        itemBids.sort((a, b) => {
+            return (new Date(b.time || 0)) - (new Date(a.time || 0));
+        });
+      }
+      itemObj.bids = itemBids;
+      // --- NEW CODE ENDS HERE ---
+
+      return jsonResponse({ ok: true, item: itemObj });
+    }
+```
+
+**After updating the code, save and deploy a new version of your web app.**
