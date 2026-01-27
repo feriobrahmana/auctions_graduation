@@ -351,11 +351,13 @@
         statusEl.innerHTML = `<span class="status-pill ${status.className}">${status.label}</span>`;
         titleEl.textContent = item.title || "Untitled item";
         descriptionEl.textContent = item.description || "";
+        const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
+        const hasBids = bids.length > 0 && Number(item.highest_bid || 0) > 0;
         metaEl.innerHTML = `
           <div><strong>Ends:</strong> ${formatDate(item.end_time_iso)}</div>
           <div><strong>Minimum increment:</strong> ${formatMoney(item.min_increment)}</div>
-          <div><strong>Highest bid:</strong> ${formatMoney(item.highest_bid)}</div>
-          <div><strong>Highest bidder:</strong> ${item.highest_name || "—"}</div>
+          <div><strong>Highest bid:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
+          <div><strong>Highest bidder:</strong> ${hasBids ? item.highest_name || "—" : "—"}</div>
           <div><strong>Last update:</strong> ${formatDate(item.last_update_iso)}</div>
         `;
         updateBidConstraints(item);
