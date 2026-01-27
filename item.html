@@ -109,6 +109,12 @@
         gap: 12px;
       }
 
+      .helper {
+        margin: 4px 0 0;
+        color: #6b7280;
+        font-size: 0.85rem;
+      }
+
       label {
         font-weight: 600;
         font-size: 0.9rem;
@@ -157,6 +163,30 @@
         background: #e0e7ff;
         color: #3730a3;
       }
+
+      .bids-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      .bids-list li {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #f8fafc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95rem;
+      }
+
+      .bids-list span {
+        color: #4b5563;
+        font-size: 0.85rem;
+      }
     </style>
   </head>
   <body>
@@ -182,16 +212,18 @@
         <h2>Place a bid</h2>
         <form id="bid-form">
           <div class="grid">
-            <label for="name">Name *</label>
+            <label for="name">Name (initials ok) *</label>
             <input id="name" name="name" required />
           </div>
           <div class="grid">
             <label for="bid">Bid amount *</label>
             <input id="bid" name="bid" type="number" min="1" step="1" required />
+            <p class="helper" id="bid-helper">Enter at least the minimum increment.</p>
           </div>
           <div class="grid">
-            <label for="phone">Phone (optional)</label>
-            <input id="phone" name="phone" />
+            <label for="phone">Phone or Kakao ID *</label>
+            <input id="phone" name="phone" required />
+            <p class="helper">We will contact the winning bidder here.</p>
           </div>
           <div class="grid">
             <label for="note">Note (optional)</label>
@@ -203,6 +235,12 @@
       </section>
 
       <section class="card" id="closed-section" hidden></section>
+
+      <section class="card" id="bids-section">
+        <h2>Recent bids</h2>
+        <ul id="bids-list" class="bids-list"></ul>
+        <p id="bids-empty" class="meta">No bids yet.</p>
+      </section>
     </main>
 
     <script>
@@ -223,6 +261,10 @@
       const galleryEmpty = document.getElementById("gallery-empty");
       const bidForm = document.getElementById("bid-form");
       const bidMessage = document.getElementById("bid-message");
+      const bidInput = document.getElementById("bid");
+      const bidHelper = document.getElementById("bid-helper");
+      const bidsList = document.getElementById("bids-list");
+      const bidsEmpty = document.getElementById("bids-empty");
 
       const formatMoney = (value) => {
         const amount = Number(value || 0);
@@ -268,6 +310,40 @@
         }
       };
 
+      const renderBids = (bids = []) => {
+        bidsList.innerHTML = "";
+        const validBids = Array.isArray(bids) ? bids.filter(Boolean) : [];
+        if (validBids.length === 0) {
+          bidsEmpty.hidden = false;
+          return;
+        }
+        bidsEmpty.hidden = true;
+        validBids.forEach((bid) => {
+          const amount = formatMoney(bid.amount || bid.bid || bid.value);
+          const name = bid.name || bid.bidder || "Anonymous";
+          const time = formatDate(bid.time || bid.timestamp || bid.created_at || bid.time_iso);
+          const item = document.createElement("li");
+          item.innerHTML = `
+            <div><strong>${amount}</strong> by ${name}</div>
+            <span>${time}</span>
+          `;
+          bidsList.appendChild(item);
+        });
+      };
+
+      const updateBidConstraints = (item) => {
+        const minIncrement = Number(item.min_increment || 1);
+        const highestBid = Number(item.highest_bid || 0);
+        const requiredMin = highestBid + minIncrement;
+        bidInput.step = Number.isFinite(minIncrement) && minIncrement > 0 ? minIncrement : 1;
+        bidInput.min = Number.isFinite(requiredMin) && requiredMin > 0 ? requiredMin : 1;
+        if (bidHelper) {
+          bidHelper.textContent = `Minimum bid: ${formatMoney(requiredMin)} (increments of ${formatMoney(
+            minIncrement
+          )}).`;
+        }
+      };
+
       const renderState = (item) => {
         if (!item) return;
         document.title = `${item.title || "Auction Item"} | Auction`;
@@ -282,6 +358,8 @@
           <div><strong>Highest bidder:</strong> ${item.highest_name || "—"}</div>
           <div><strong>Last update:</strong> ${formatDate(item.last_update_iso)}</div>
         `;
+        updateBidConstraints(item);
+        renderBids(item.bids);
 
         if (item.status === "OPEN") {
           bidSection.hidden = false;
