@@ -213,9 +213,7 @@
         emptyState.hidden = true;
 
         items.forEach((item) => {
-          const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
-          const hasBids =
-            bids.length > 0 || (Number(item.highest_bid || 0) > 0 && item.highest_bid !== null);
+          const hasBids = Number(item.highest_bid || 0) > 0;
           const status = buildStatus(item);
           const card = document.createElement("article");
           card.className = "card";
