@@ -351,8 +351,14 @@
         statusEl.innerHTML = `<span class="status-pill ${status.className}">${status.label}</span>`;
         titleEl.textContent = item.title || "Untitled item";
         descriptionEl.textContent = item.description || "";
+
+        // Robustness: If the backend returns an empty bids list, we must assume
+        // the auction has no active bids, even if the summary fields (from a different sheet tab)
+        // are stale and show a value. We trust the explicit list of bids over the summary.
         const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
-        const hasBids = Number(item.highest_bid || 0) > 0;
+        const explicitNoBids = Array.isArray(item.bids) && bids.length === 0;
+        const hasBids = !explicitNoBids && Number(item.highest_bid || 0) > 0;
+
         metaEl.innerHTML = `
           <div><strong>Ends:</strong> ${formatDate(item.end_time_iso)}</div>
           <div><strong>Minimum increment:</strong> ${formatMoney(item.min_increment)}</div>
