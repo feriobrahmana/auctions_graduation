@@ -361,7 +361,7 @@
           <div><strong>Last update:</strong> ${formatDate(item.last_update_iso)}</div>
         `;
         updateBidConstraints(item);
-        renderBids(bids);
+        renderBids(item.bids);
 
         if (item.status === "OPEN") {
           bidSection.hidden = false;
