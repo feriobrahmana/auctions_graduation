@@ -213,6 +213,9 @@
         emptyState.hidden = true;
 
         items.forEach((item) => {
+          const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
+          const hasBids =
+            bids.length > 0 || (Number(item.highest_bid || 0) > 0 && item.highest_bid !== null);
           const status = buildStatus(item);
           const card = document.createElement("article");
           card.className = "card";
@@ -223,9 +226,9 @@
             <h2>${item.title || "Untitled item"}</h2>
             <p>${item.description || ""}</p>
             <div class="meta">
-              <div><strong>Highest bid:</strong> ${formatMoney(item.highest_bid)}</div>
+              <div><strong>Highest bid:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
               <div><strong>Ends:</strong> ${formatDate(item.end_time_iso)}</div>
-              <div><strong>Last update:</strong> ${formatDate(item.last_update_iso)}</div>
+              <div><strong>Last update:</strong> ${hasBids ? formatDate(item.last_update_iso) : "—"}</div>
             </div>
             <a href="item.html?item_id=${encodeURIComponent(item.item_id)}">View details →</a>
           `;
