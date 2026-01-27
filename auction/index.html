@@ -147,7 +147,7 @@
     <footer>Live updates every few seconds.</footer>
 
     <script>
-      const API_URL = "https://script.google.com/macros/s/AKfycbyklcMkXHiOF48Gszyy6LYgwYe17SHqgrhRA3R0V3sz4CSiPE3Ascb6cdKBzFMGIVk/exec";
+      const API_URL = "https://script.google.com/macros/s/AKfycbx7neSPdg_dJlI63QNApAaldHdsugbG4kNm2rHFWML8VqfVB2iXzl5GOCRxqHZumq4x/exec";
       const API_KEY = "auction-2026-ferio-9xQp2";
       const POLL_MS = 3000;
 
@@ -183,6 +183,7 @@
       const renderItems = (items) => {
         itemsGrid.innerHTML = "";
         if (!items || items.length === 0) {
+          emptyState.textContent = "No items yet. Check back soon.";
           emptyState.hidden = false;
           return;
         }
@@ -215,9 +216,17 @@
             `${API_URL}?action=list_items&key=${encodeURIComponent(API_KEY)}`
           );
           const data = await response.json();
+          if (!data.ok) {
+            emptyState.textContent = `Unable to load items (${data.error || "unknown_error"}).`;
+            emptyState.hidden = false;
+            return;
+          }
           renderItems(data.items || []);
         } catch (error) {
           console.error("Failed to load items", error);
+          emptyState.textContent =
+            "Unable to load items. Check the API URL, key, and deployment access.";
+          emptyState.hidden = false;
         }
       };
 
