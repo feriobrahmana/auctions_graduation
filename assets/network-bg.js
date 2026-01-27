@@ -8,8 +8,6 @@
   canvas.style.height = '100%';
   canvas.style.zIndex = '-1';
   canvas.style.pointerEvents = 'none';
-  // Gradient background handled in CSS, but we can add a base fill here if needed.
-  // We will leave the canvas transparent so CSS background-color shines through.
   document.body.prepend(canvas);
 
   const ctx = canvas.getContext('2d');
@@ -17,12 +15,11 @@
   let particles = [];
 
   // Configuration
-  const particleCount = window.innerWidth < 768 ? 40 : 80; // Fewer on mobile
-  const connectionDistance = 150;
   const moveSpeed = 0.3;
+  const connectionDistance = 150;
 
-  // Colors
-  const colors = ['#00f0ff', '#bf00ff']; // Cyan, Purple
+  // Colors (Grayscale/White)
+  const colors = ['#ffffff', '#e0e0e0', '#cccccc'];
 
   class Particle {
     constructor() {
@@ -82,7 +79,8 @@
 
         if (distance < connectionDistance) {
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(100, 100, 255, ${1 - distance / connectionDistance})`;
+          // White connections, fading out
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 * (1 - distance / connectionDistance)})`;
           ctx.lineWidth = 0.5;
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);

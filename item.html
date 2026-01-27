@@ -8,17 +8,17 @@
     <style>
       :root {
         color-scheme: dark;
-        font-family: "Merriweather", "Times New Roman", serif;
-        background: #050510;
+        font-family: "Courier New", Courier, monospace;
+        background: #0a0a0a;
         color: #e0e0e0;
 
-        --primary: #00f0ff;
-        --secondary: #bf00ff;
-        --glass-bg: rgba(20, 30, 60, 0.6);
-        --glass-border: rgba(100, 150, 255, 0.2);
-        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        --input-bg: rgba(255, 255, 255, 0.05);
-        --input-border: rgba(255, 255, 255, 0.2);
+        --primary: #FFA500;
+        --secondary: #ffffff;
+        --glass-bg: rgba(20, 20, 20, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        --input-bg: rgba(0, 0, 0, 0.5);
+        --input-border: #444;
       }
 
       * {
@@ -31,11 +31,11 @@
       }
 
       header {
-        background: rgba(5, 5, 16, 0.9);
-        backdrop-filter: blur(10px);
+        background: rgba(10, 10, 10, 0.9);
+        backdrop-filter: blur(5px);
         color: #fff;
         padding: 24px;
-        border-bottom: 1px solid var(--glass-border);
+        border-bottom: 1px dashed var(--primary);
         position: relative;
         z-index: 10;
       }
@@ -43,17 +43,16 @@
       header a {
         color: var(--primary);
         text-decoration: none;
-        font-weight: 600;
-        font-family: "Inter", sans-serif;
+        font-weight: bold;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: color 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
 
       header a:hover {
         color: #fff;
-        text-shadow: 0 0 8px var(--primary);
       }
 
       main {
@@ -61,7 +60,7 @@
         margin: 0 auto 40px;
         padding: 24px;
         display: grid;
-        gap: 24px;
+        gap: 30px;
         position: relative;
         z-index: 1;
       }
@@ -70,69 +69,77 @@
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
         backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 24px;
+        /* Hexagon look via clip-path for consistency?
+           For detail view with lots of text/forms, a full hexagon is hard to use.
+           We will use "cut corners" or a tech-panel look instead. */
+        clip-path: polygon(
+            20px 0, 100% 0,
+            100% calc(100% - 20px), calc(100% - 20px) 100%,
+            0 100%, 0 20px
+        );
+        padding: 32px;
         box-shadow: var(--card-shadow);
+        border-left: 2px solid var(--primary); /* Accent line */
       }
 
       h1 {
         margin-top: 0;
         color: #fff;
-        font-size: 2rem;
+        font-size: 1.8rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 16px;
       }
 
       h2 {
         color: var(--primary);
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
 
       .status-pill {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
         padding: 4px 10px;
-        border-radius: 4px;
+        border: 1px solid currentColor;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        font-family: "Inter", sans-serif;
-        border: 1px solid transparent;
+        letter-spacing: 0.05em;
+        margin-bottom: 16px;
       }
 
       .status-open {
-        background: rgba(0, 240, 255, 0.1);
-        color: #00f0ff;
-        border-color: rgba(0, 240, 255, 0.3);
+        color: var(--primary);
       }
 
       .status-sold {
-        background: rgba(255, 50, 50, 0.1);
-        color: #ff5050;
-        border-color: rgba(255, 50, 50, 0.3);
+        color: #ff4444;
       }
 
       .status-closed {
-        background: rgba(150, 150, 150, 0.1);
-        color: #aaa;
-        border-color: rgba(150, 150, 150, 0.3);
+        color: #888;
       }
 
       .meta {
         display: grid;
         gap: 12px;
-        color: #b0b5c0;
-        font-size: 0.95rem;
-        font-family: "Inter", sans-serif;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        color: #aaa;
+        font-size: 0.9rem;
+        border-top: 1px dashed #333;
         padding-top: 16px;
         margin-top: 16px;
       }
 
       .meta div strong {
-        color: #e0e0e0;
-        margin-right: 4px;
+        color: #fff;
+        margin-right: 8px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
       }
 
       .grid {
@@ -150,15 +157,18 @@
         width: 100%;
         height: 200px;
         object-fit: cover;
-        border-radius: 8px;
-        background: rgba(0,0,0,0.3);
-        border: 1px solid var(--glass-border);
-        transition: transform 0.2s, border-color 0.2s;
+        background: #222;
+        border: 1px solid #444;
+        filter: grayscale(100%);
+        transition: filter 0.2s, transform 0.2s;
+        /* Hexagon mask for gallery images too */
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
       }
 
       .gallery img:hover {
+        filter: grayscale(0%);
         transform: scale(1.02);
-        border-color: var(--primary);
+        z-index: 2;
       }
 
       form {
@@ -168,92 +178,92 @@
 
       .helper {
         margin: 6px 0 0;
-        color: #9ca3af;
-        font-size: 0.8rem;
-        font-family: "Inter", sans-serif;
+        color: #666;
+        font-size: 0.75rem;
       }
 
       label {
-        font-weight: 600;
-        font-size: 0.9rem;
+        font-weight: bold;
+        font-size: 0.8rem;
         color: var(--primary);
-        font-family: "Inter", sans-serif;
         margin-bottom: 6px;
         display: block;
+        text-transform: uppercase;
       }
 
       input,
       textarea {
         width: 100%;
         padding: 12px 14px;
-        border-radius: 8px;
-        border: 1px solid var(--input-border);
         background: var(--input-bg);
+        border: 1px solid var(--input-border);
         color: #fff;
         font-size: 1rem;
-        font-family: "Inter", sans-serif;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+        transition: border-color 0.2s;
+        border-radius: 0; /* Sharp corners */
       }
 
       input:focus,
       textarea:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1);
+        background: rgba(255, 165, 0, 0.1);
       }
 
       button {
         padding: 14px 20px;
-        border-radius: 8px;
-        border: none;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        color: #fff;
-        font-weight: 600;
+        border: 1px solid var(--primary);
+        background: transparent;
+        color: var(--primary);
+        font-weight: bold;
         cursor: pointer;
-        font-family: "Inter", sans-serif;
+        font-family: inherit;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        transition: opacity 0.2s, transform 0.1s;
+        letter-spacing: 2px;
+        transition: all 0.2s;
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
       }
 
       button:hover {
-        opacity: 0.9;
-      }
-
-      button:active {
-        transform: scale(0.98);
+        background: var(--primary);
+        color: #000;
       }
 
       button:disabled {
-        background: #4b5563;
+        border-color: #555;
+        color: #555;
         cursor: not-allowed;
-        opacity: 0.7;
+      }
+
+      button:disabled:hover {
+        background: transparent;
       }
 
       .notice {
         padding: 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-family: "Inter", sans-serif;
+        font-weight: bold;
         text-align: center;
+        border: 1px solid;
+        text-transform: uppercase;
       }
 
       .notice.success {
-        background: rgba(0, 240, 255, 0.15);
-        color: #00f0ff;
-        border: 1px solid rgba(0, 240, 255, 0.3);
+        border-color: var(--primary);
+        color: var(--primary);
+        background: rgba(255, 165, 0, 0.1);
       }
 
       .notice.error {
-        background: rgba(255, 50, 50, 0.15);
-        color: #ff5050;
-        border: 1px solid rgba(255, 50, 50, 0.3);
+        border-color: #ff4444;
+        color: #ff4444;
+        background: rgba(255, 68, 68, 0.1);
       }
 
       .notice.info {
-        background: rgba(255, 255, 255, 0.1);
+        border-color: #fff;
         color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .bids-list {
@@ -261,69 +271,68 @@
         padding: 0;
         margin: 0;
         display: grid;
-        gap: 10px;
+        gap: 1px; /* Divider look */
+        background: #333;
+        border: 1px solid #333;
       }
 
       .bids-list li {
         padding: 12px 16px;
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: #111;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 12px;
-        font-size: 0.95rem;
-        font-family: "Inter", sans-serif;
+        font-size: 0.9rem;
       }
 
       .bids-list span {
-        color: #9ca3af;
-        font-size: 0.85rem;
+        color: #666;
+        font-size: 0.75rem;
       }
     </style>
   </head>
   <body>
     <header>
-      <a href="index.html">← Back to items</a>
+      <a href="index.html">&lt; RETURN_TO_GRID</a>
     </header>
 
     <main>
       <section class="card">
         <div id="status"></div>
-        <h1 id="title">Loading...</h1>
+        <h1 id="title">INITIALIZING...</h1>
         <p id="description"></p>
         <div class="meta" id="meta"></div>
       </section>
 
       <section class="card">
-        <h2>Photos</h2>
+        <h2>VISUAL_DATA</h2>
         <div id="gallery" class="gallery"></div>
-        <p id="gallery-empty" class="meta" style="border-top: none;">No photos uploaded yet.</p>
+        <p id="gallery-empty" class="meta" style="border-top: none;">NO_DATA_AVAILABLE</p>
       </section>
 
       <section class="card" id="bid-section">
-        <h2>Place a bid</h2>
+        <h2>INPUT_BID</h2>
         <form id="bid-form">
           <div class="grid">
-            <label for="name">Name (initials ok) *</label>
+            <label for="name">IDENTITY (INITIALS) *</label>
             <input id="name" name="name" required />
           </div>
           <div class="grid">
-            <label for="bid">Bid amount *</label>
+            <label for="bid">VALUE (USD) *</label>
             <input id="bid" name="bid" type="number" min="1" step="1" required />
-            <p class="helper" id="bid-helper">Enter at least the minimum increment.</p>
+            <p class="helper" id="bid-helper">MIN_INCREMENT_REQUIRED</p>
           </div>
           <div class="grid">
-            <label for="phone">Phone or Kakao ID *</label>
+            <label for="phone">CONTACT_PROTOCOL (PHONE/KAKAO) *</label>
             <input id="phone" name="phone" required />
-            <p class="helper">We will contact the winning bidder here.</p>
+            <p class="helper">WINNING_BIDDER_WILL_BE_CONTACTED</p>
           </div>
           <div class="grid">
-            <label for="note">Note (optional)</label>
+            <label for="note">ANNOTATION (OPTIONAL)</label>
             <textarea id="note" name="note" rows="3"></textarea>
           </div>
-          <button type="submit">Submit bid</button>
+          <button type="submit">TRANSMIT_BID</button>
         </form>
         <div id="bid-message"></div>
       </section>
@@ -331,9 +340,9 @@
       <section class="card" id="closed-section" hidden></section>
 
       <section class="card" id="bids-section">
-        <h2>Recent bids</h2>
+        <h2>TRANSACTION_LOG</h2>
         <ul id="bids-list" class="bids-list"></ul>
-        <p id="bids-empty" class="meta" style="border-top: none;">No bids yet.</p>
+        <p id="bids-empty" class="meta" style="border-top: none;">NO_RECORDS</p>
       </section>
     </main>
 
@@ -414,11 +423,11 @@
         bidsEmpty.hidden = true;
         validBids.forEach((bid) => {
           const amount = formatMoney(bid.amount || bid.bid || bid.value);
-          const name = bid.name || bid.bidder || "Anonymous";
+          const name = bid.name || bid.bidder || "ANONYMOUS";
           const time = formatDate(bid.time || bid.timestamp || bid.created_at || bid.time_iso);
           const item = document.createElement("li");
           item.innerHTML = `
-            <div><strong>${amount}</strong> by ${name}</div>
+            <div><strong>${amount}</strong> BY ${name}</div>
             <span>${time}</span>
           `;
           bidsList.appendChild(item);
@@ -432,7 +441,7 @@
         bidInput.step = Number.isFinite(minIncrement) && minIncrement > 0 ? minIncrement : 1;
         bidInput.min = Number.isFinite(requiredMin) && requiredMin > 0 ? requiredMin : 1;
         if (bidHelper) {
-          bidHelper.textContent = `Minimum bid: ${formatMoney(requiredMin)} (increments of ${formatMoney(
+          bidHelper.textContent = `MIN_BID: ${formatMoney(requiredMin)} (INCREMENT: ${formatMoney(
             minIncrement
           )}).`;
         }
@@ -440,19 +449,19 @@
 
       const renderState = (item) => {
         if (!item) return;
-        document.title = `${item.title || "Auction Item"} | Auction`;
+        document.title = `${item.title || "ITEM"} | AUCTION_NET`;
         const status = buildStatus(item);
         statusEl.innerHTML = `<span class="status-pill ${status.className}">${status.label}</span>`;
-        titleEl.textContent = item.title || "Untitled item";
+        titleEl.textContent = item.title || "UNTITLED_ITEM";
         descriptionEl.textContent = item.description || "";
         const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
         const hasBids = Number(item.highest_bid || 0) > 0;
         metaEl.innerHTML = `
-          <div><strong>Ends:</strong> ${formatDate(item.end_time_iso)}</div>
-          <div><strong>Minimum increment:</strong> ${formatMoney(item.min_increment)}</div>
-          <div><strong>Highest bid:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
-          <div><strong>Highest bidder:</strong> ${hasBids ? item.highest_name || "—" : "—"}</div>
-          <div><strong>Last update:</strong> ${hasBids ? formatDate(item.last_update_iso) : "—"}</div>
+          <div><strong>DEADLINE:</strong> ${formatDate(item.end_time_iso)}</div>
+          <div><strong>INCREMENT:</strong> ${formatMoney(item.min_increment)}</div>
+          <div><strong>CURRENT_HIGH:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
+          <div><strong>HOLDER:</strong> ${hasBids ? item.highest_name || "—" : "—"}</div>
+          <div><strong>LAST_SYNC:</strong> ${hasBids ? formatDate(item.last_update_iso) : "—"}</div>
         `;
         updateBidConstraints(item);
         renderBids(item.bids);
@@ -466,22 +475,22 @@
           const highestBid = Number(item.highest_bid || 0);
           if (highestBid > 0) {
             closedSection.innerHTML = `
-              <div class="notice success">SOLD</div>
-              <p><strong>Winning bid:</strong> ${formatMoney(item.highest_bid)}</p>
-              <p><strong>Winner:</strong> ${item.highest_name || "—"}</p>
+              <div class="notice success">ITEM_SOLD</div>
+              <p><strong>WINNING_BID:</strong> ${formatMoney(item.highest_bid)}</p>
+              <p><strong>WINNER:</strong> ${item.highest_name || "—"}</p>
             `;
           } else {
             closedSection.innerHTML = `
-              <div class="notice info">CLOSED (No sale)</div>
-              <p>This auction ended without a winning bid.</p>
+              <div class="notice info">CLOSED_NO_SALE</div>
+              <p>AUCTION_TERMINATED_WITHOUT_WINNER.</p>
             `;
           }
         }
       };
 
       const showError = (message) => {
-        statusEl.innerHTML = '<span class="status-pill status-closed">UNAVAILABLE</span>';
-        titleEl.textContent = "Unable to load item";
+        statusEl.innerHTML = '<span class="status-pill status-closed">ERROR</span>';
+        titleEl.textContent = "LOAD_FAILURE";
         descriptionEl.textContent = message;
         metaEl.innerHTML = "";
         bidSection.hidden = true;
@@ -491,7 +500,7 @@
 
       const fetchState = async () => {
         if (!itemId) {
-          showError("Missing item id in the URL.");
+          showError("MISSING_ITEM_ID");
           return;
         }
         try {
@@ -502,13 +511,13 @@
           );
           const data = await response.json();
           if (!data.ok) {
-            showError(`Unable to load item (${data.error || "unknown_error"}).`);
+            showError(`API_ERROR (${data.error || "UNKNOWN"}).`);
             return;
           }
           renderState(data.item || data);
         } catch (error) {
           console.error("Failed to load item", error);
-          showError("Unable to load item. Check the API URL, key, and deployment access.");
+          showError("NETWORK_FAILURE. CHECK_CONNECTION.");
         }
       };
 
@@ -539,11 +548,11 @@
           const data = await response.json();
 
           if (data.ok) {
-            bidMessage.innerHTML = '<div class="notice success">Bid accepted</div>';
+            bidMessage.innerHTML = '<div class="notice success">BID_ACKNOWLEDGED</div>';
             bidForm.reset();
           } else if (data.error === "bid_too_low") {
             bidMessage.innerHTML = `
-              <div class="notice error">Bid too low. Minimum required: ${formatMoney(
+              <div class="notice error">REJECTED: BID_TOO_LOW. MIN: ${formatMoney(
                 data.required_min
               )}</div>
             `;
@@ -552,22 +561,22 @@
             data.error === "auction_closed_by_time"
           ) {
             bidMessage.innerHTML =
-              '<div class="notice error">Auction closed / sold</div>';
+              '<div class="notice error">REJECTED: AUCTION_CLOSED</div>';
           } else {
             bidMessage.innerHTML =
-              '<div class="notice error">Unable to place bid. Please try again.</div>';
+              '<div class="notice error">TRANSMISSION_ERROR. RETRY.</div>';
           }
         } catch (error) {
           bidMessage.innerHTML =
-            '<div class="notice error">Network error. Please try again.</div>';
+            '<div class="notice error">NETWORK_ERROR. RETRY.</div>';
         } finally {
           bidForm.querySelector("button").disabled = false;
         }
       });
 
       if (!itemId) {
-        titleEl.textContent = "Item not found";
-        descriptionEl.textContent = "Missing item_id in the URL.";
+        titleEl.textContent = "NOT_FOUND";
+        descriptionEl.textContent = "URL_PARAMETER_MISSING: item_id";
         bidSection.hidden = true;
         closedSection.hidden = true;
       } else {
