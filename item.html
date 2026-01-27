@@ -240,7 +240,6 @@
         <h2>Recent bids</h2>
         <ul id="bids-list" class="bids-list"></ul>
         <p id="bids-empty" class="meta">No bids yet.</p>
-        <p id="bids-updated" class="helper"></p>
       </section>
     </main>
 
@@ -266,7 +265,6 @@
       const bidHelper = document.getElementById("bid-helper");
       const bidsList = document.getElementById("bids-list");
       const bidsEmpty = document.getElementById("bids-empty");
-      const bidsUpdated = document.getElementById("bids-updated");
 
       const formatMoney = (value) => {
         const amount = Number(value || 0);
@@ -312,14 +310,11 @@
         }
       };
 
-      const renderBids = (bids = [], lastUpdate) => {
+      const renderBids = (bids = []) => {
         bidsList.innerHTML = "";
         const validBids = Array.isArray(bids) ? bids.filter(Boolean) : [];
         if (validBids.length === 0) {
           bidsEmpty.hidden = false;
-          if (bidsUpdated) {
-            bidsUpdated.textContent = "Last bid update: —";
-          }
           return;
         }
         bidsEmpty.hidden = true;
@@ -334,9 +329,6 @@
           `;
           bidsList.appendChild(item);
         });
-        if (bidsUpdated) {
-          bidsUpdated.textContent = `Last bid update: ${formatDate(lastUpdate)}`;
-        }
       };
 
       const updateBidConstraints = (item) => {
@@ -369,7 +361,7 @@
           <div><strong>Last update:</strong> ${formatDate(item.last_update_iso)}</div>
         `;
         updateBidConstraints(item);
-        renderBids(bids, item.last_update_iso);
+        renderBids(item.bids);
 
         if (item.status === "OPEN") {
           bidSection.hidden = false;
