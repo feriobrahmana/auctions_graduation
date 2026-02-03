@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Auction Item</title>
+    <script src="assets/config.js"></script>
     <script src="assets/network-bg.js" defer></script>
     <style>
       :root {
@@ -175,6 +176,14 @@
         gap: 20px;
       }
 
+      /* Honeypot field - hidden from real users */
+      .website-field {
+        position: absolute;
+        left: -9999px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
       .helper {
         margin: 6px 0 0;
         color: #666;
@@ -313,6 +322,12 @@
       <section class="card" id="bid-section">
         <h2>INPUT_BID</h2>
         <form id="bid-form">
+          <!-- HONEYPOT -->
+          <div class="website-field">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
           <div class="grid">
             <label for="name">IDENTITY (INITIALS) *</label>
             <input id="name" name="name" required />
@@ -346,8 +361,7 @@
     </main>
 
     <script>
-      const API_URL = "https://script.google.com/macros/s/AKfycbwwOQRLOHxZslp-fScI-HyGnqWuwjQd_BuVFTU7MSkEqvdtSfCpmtxc1PbuBTJ9odFu/exec";
-      const API_KEY = "auction-2026-ferio-9xQp2";
+      const { API_URL, API_KEY } = CONFIG;
       const POLL_MS = 3000;
 
       const params = new URLSearchParams(window.location.search);
@@ -542,6 +556,8 @@
           bid: Number(bidForm.bid.value),
           phone: bidForm.phone.value.trim(),
           note: bidForm.note.value.trim(),
+          // Send honeypot value to backend
+          website: bidForm.website.value,
         };
 
         bidForm.querySelector("button").disabled = true;
