@@ -1,4 +1,4 @@
-# Graduation Auction (Static Site)
+# Graduation Auction - Ferio persoal auction listing
 
 This folder contains a static auction website designed for GitHub Pages. It polls a Google Apps Script API for live updates and supports multiple items.
 
