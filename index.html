@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Graduation Auction</title>
+    <script src="assets/config.js"></script>
     <script src="assets/network-bg.js" defer></script>
     <style>
       :root {
@@ -268,8 +269,7 @@
     </footer>
 
     <script>
-      const API_URL = "https://script.google.com/macros/s/AKfycbwwOQRLOHxZslp-fScI-HyGnqWuwjQd_BuVFTU7MSkEqvdtSfCpmtxc1PbuBTJ9odFu/exec";
-      const API_KEY = "auction-2026-ferio-9xQp2";
+      const { API_URL, API_KEY } = CONFIG;
       const POLL_MS = 3000;
       const CACHE_KEY = "graduation_auction_items";
       const CACHE_TIME_KEY = "graduation_auction_items_updated";
