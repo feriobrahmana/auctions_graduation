@@ -10,7 +10,7 @@
         color-scheme: dark;
         font-family: "Courier New", Courier, monospace;
         background: #0a0a0a;
-        color: #e0e0e0;
+        color: #f5f5f5;
 
         --primary: #FFA500;
         --secondary: #ffffff;
@@ -128,7 +128,8 @@
       .meta {
         display: grid;
         gap: 12px;
-        color: #aaa;
+        color: #ddd;
+        font-weight: 500;
         font-size: 0.9rem;
         border-top: 1px dashed #333;
         padding-top: 16px;
@@ -159,14 +160,12 @@
         object-fit: cover;
         background: #222;
         border: 1px solid #444;
-        filter: grayscale(100%);
-        transition: filter 0.2s, transform 0.2s;
+        transition: transform 0.2s;
         /* Hexagon mask for gallery images too */
         clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
       }
 
       .gallery img:hover {
-        filter: grayscale(0%);
         transform: scale(1.02);
         z-index: 2;
       }
@@ -319,7 +318,7 @@
             <input id="name" name="name" required />
           </div>
           <div class="grid">
-            <label for="bid">VALUE (USD) *</label>
+            <label for="bid">VALUE (KRW) *</label>
             <input id="bid" name="bid" type="number" min="1" step="1" required />
             <p class="helper" id="bid-helper">MIN_INCREMENT_REQUIRED</p>
           </div>
@@ -373,7 +372,7 @@
         const amount = Number(value || 0);
         return amount.toLocaleString(undefined, {
           style: "currency",
-          currency: "USD",
+          currency: "KRW",
           maximumFractionDigits: 0,
         });
       };
