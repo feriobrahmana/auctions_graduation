@@ -389,10 +389,10 @@
         const highestBid = Number(item.highest_bid || 0);
         if (item.status === "CLOSED") {
           return highestBid > 0
-            ? { label: "SOLD", className: "status-sold" }
-            : { label: "CLOSED", className: "status-closed" };
+            ? { label: "STATUS: SOLD", className: "status-sold" }
+            : { label: "STATUS: CLOSED", className: "status-closed" };
         }
-        return { label: "OPEN", className: "status-open" };
+        return { label: "STATUS: OPEN", className: "status-open" };
       };
 
       const renderGallery = () => {
@@ -435,15 +435,22 @@
       };
 
       const updateBidConstraints = (item) => {
-        const minIncrement = Number(item.min_increment || 1);
+        const minIncrement = Number(item.min_increment || 0);
         const highestBid = Number(item.highest_bid || 0);
-        const requiredMin = highestBid + minIncrement;
+        const minimumBid = Number(item.minimum_bid || 0);
+
+        // Backend logic: requiredMin = Math.max(minimumBid, highestBid + Math.max(minInc, 0))
+        const requiredMin = Math.max(minimumBid, highestBid + Math.max(minIncrement, 0));
+
         bidInput.step = Number.isFinite(minIncrement) && minIncrement > 0 ? minIncrement : 1;
         bidInput.min = Number.isFinite(requiredMin) && requiredMin > 0 ? requiredMin : 1;
+
         if (bidHelper) {
-          bidHelper.textContent = `MIN_BID: ${formatMoney(requiredMin)} (INCREMENT: ${formatMoney(
-            minIncrement
-          )}).`;
+          if (highestBid > 0) {
+             bidHelper.textContent = `MIN_BID: ${formatMoney(requiredMin)} (INCREMENT: ${formatMoney(minIncrement)}).`;
+          } else {
+             bidHelper.textContent = `MIN_BID: ${formatMoney(requiredMin)} (STARTING_BID).`;
+          }
         }
       };
 
@@ -456,8 +463,11 @@
         descriptionEl.textContent = item.description || "";
         const bids = Array.isArray(item.bids) ? item.bids.filter(Boolean) : [];
         const hasBids = Number(item.highest_bid || 0) > 0;
+        const minimumBid = Number(item.minimum_bid || 0);
+
         metaEl.innerHTML = `
           <div><strong>DEADLINE:</strong> ${formatDate(item.end_time_iso)}</div>
+          <div><strong>STARTING_BID:</strong> ${formatMoney(minimumBid)}</div>
           <div><strong>INCREMENT:</strong> ${formatMoney(item.min_increment)}</div>
           <div><strong>CURRENT_HIGH:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
           <div><strong>HOLDER:</strong> ${hasBids ? item.highest_name || "—" : "—"}</div>

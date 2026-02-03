@@ -301,10 +301,10 @@
         const highestBid = Number(item.highest_bid || 0);
         if (item.status === "CLOSED") {
           return highestBid > 0
-            ? { label: "SOLD", className: "status-sold" }
-            : { label: "CLOSED", className: "status-closed" };
+            ? { label: "STATUS: SOLD", className: "status-sold" }
+            : { label: "STATUS: CLOSED", className: "status-closed" };
         }
-        return { label: "OPEN", className: "status-open" };
+        return { label: "STATUS: OPEN", className: "status-open" };
       };
 
       const renderItems = (items) => {
@@ -318,12 +318,23 @@
 
         items.forEach((item) => {
           const hasBids = Number(item.highest_bid || 0) > 0;
+          const minBid = Number(item.minimum_bid || 0);
           const status = buildStatus(item);
           const cardWrapper = document.createElement("article");
           cardWrapper.className = "card-wrapper";
 
           // Image handling
           const imgUrl = `assets/${item.item_id}/1.jpg`;
+
+          let bidLabel = "BID:";
+          let bidValue = formatMoney(0);
+
+          if (hasBids) {
+            bidValue = formatMoney(item.highest_bid);
+          } else if (minBid > 0) {
+            bidLabel = "STARTS:";
+            bidValue = formatMoney(minBid);
+          }
 
           cardWrapper.innerHTML = `
             <div class="card">
@@ -336,7 +347,7 @@
                 <h2>${item.title || "Untitled item"}</h2>
                 <p>${item.description || ""}</p>
                 <div class="meta">
-                  <div><strong>BID:</strong> ${formatMoney(hasBids ? item.highest_bid : 0)}</div>
+                  <div><strong>${bidLabel}</strong> ${bidValue}</div>
                   <div><strong>END:</strong> ${formatDate(item.end_time_iso)}</div>
                 </div>
                 <a href="item.html?item_id=${encodeURIComponent(item.item_id)}">ACCESS_NODE</a>
